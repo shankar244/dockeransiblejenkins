@@ -13,7 +13,7 @@ pipeline {
 						url: 'https://github.com/shankar244/dockeransiblejenkins.git' 
             }
         }
-        stage('Maven Clean') { 
+        stage('Maven Clean Package') { 
             steps {
                 sh " mvn clean package" 
             }
