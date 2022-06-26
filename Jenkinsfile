@@ -1,44 +1,44 @@
 pipeline {
     agent any 
-    tools {
-      maven 'maven home'
-    }
-    environment {
-      DOCKER_TAG = getVersion()
-    }
+	tools {
+		maven 'maven-home'
+		}
+	environment {
+	  DOCKER_TAG = getVersion ()
+	}
     stages {
         stage('SCM Checkout') { 
             steps {
-                git credentialsId: 'github', 
-                    url: 'https://github.com/vikas99341/dockeransiblejenkins'
+                git credentialsId: 'git-credentials',
+						url: 'https://github.com/shankar244/dockeransiblejenkins.git' 
             }
         }
-        stage('Maven Clean Build Package') { 
+        stage('Maven Clean') { 
             steps {
-                sh "mvn clean package"
+                sh " mvn clean package" 
             }
         }
-        stage('Build Docker Image') { 
+        stage('Custom Docker Image') { 
             steps {
-                sh "docker build . -t vikas24775/node-morning:${DOCKER_TAG} "
+                sh " docker build . -t shankar244/mycustom-image:${DOCKER_TAG} " 
             }
         }
-        stage('Push Docker Image') { 
+        stage('Docker Image Push') { 
             steps {
-				withCredentials([string(credentialsId: 'docker-hub-password', variable: 'dockerhubpassword')]) {
-					sh "docker login -u vikas24775 -p ${dockerhubpassword}"
-				}
-                sh "docker push vikas24775/node-morning:${DOCKER_TAG} "
+			withCredentials([string(credentialsId: 'docker-hub', variable: 'dockerhubpawd')]) {
+				sh "docker login -u shankar244 -p ${dockerhubpawd}"
+			}
+                sh " docker push shankar244/mycustom-image:${DOCKER_TAG} " 
             }
         }
-        stage('Ansible SSH') { 
+	 stage('Ansible Deployment') { 
             steps {
-                ansiblePlaybook credentialsId: 'ansible-playbook', disableHostKeyChecking: true, extras: "-e DOCKER_TAG=${DOCKER_TAG}", installation: 'ansible_home', inventory: 'dev.inv', playbook: 'deploy-docker.yml'
+				ansiblePlaybook credentialsId: 'ansible-dev-server', disableHostKeyChecking: true, extras: "-e DOCKER_TAG=${DOCKER_TAG}", installation: 'ansible-home', inventory: 'dev.inv', playbook: 'deploy-docker.yml'
             }
         }
     }
 }
-def getVersion(){
-    def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
-    return commitHash
+def getVersion () {
+	def commitHash = sh label: '', returnStdout: true, script: 'git rev-parse --short HEAD'
+	return commitHash
 }
